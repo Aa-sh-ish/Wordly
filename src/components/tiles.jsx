@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import './Tiles.css';
+import './tiles.css';
 
 const TARGET_WORD = 'CHECK';
 const WORD_LENGTH = TARGET_WORD.length;
