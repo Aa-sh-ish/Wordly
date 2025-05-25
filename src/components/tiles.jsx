@@ -1,21 +1,40 @@
-import { useRef, useState, useEffect } from 'react';
-import './tiles.css';
+import { useEffect, useState, useRef } from 'react';
+import './Tiles.css';
 
-const TARGET_WORD = 'CHECK';
-const WORD_LENGTH = TARGET_WORD.length;
+const WORD_LENGTH = 5;
 const MAX_ATTEMPTS = 6;
 
 function Tiles() {
-  const emptyRow = Array(WORD_LENGTH).fill('');
-  const [guesses, setGuesses] = useState(Array(MAX_ATTEMPTS).fill().map(() => [...emptyRow]));
-  const [feedbacks, setFeedbacks] = useState(Array(MAX_ATTEMPTS).fill().map(() => [...emptyRow]));
+  const [targetWord, setTargetWord] = useState('');
+  const [guesses, setGuesses] = useState([]);
+  const [feedbacks, setFeedbacks] = useState([]);
   const [currentRow, setCurrentRow] = useState(0);
   const inputRefs = useRef([]);
 
+  const emptyRow = Array(WORD_LENGTH).fill('');
+
   useEffect(() => {
-    inputRefs.current = Array(MAX_ATTEMPTS)
-      .fill()
-      .map(() => Array(WORD_LENGTH).fill(null));
+   fetch('https://raw.githubusercontent.com/dwyl/english-words/master/words.txt')
+  .then(res => {
+    if (!res.ok) throw new Error('Network response was not ok');
+    return res.text();
+  })
+  .then(text => {
+    const words = text
+      .split('\n')
+      .map(w => w.trim().toUpperCase())
+      .filter(w => /^[A-Z]+$/.test(w) && w.length === WORD_LENGTH);
+    const randomWord = words[Math.floor(Math.random() * words.length)];
+    setTargetWord(randomWord);
+    setGuesses(Array(MAX_ATTEMPTS).fill().map(() => [...emptyRow]));
+    setFeedbacks(Array(MAX_ATTEMPTS).fill().map(() => [...emptyRow]));
+    inputRefs.current = Array(MAX_ATTEMPTS).fill().map(() => Array(WORD_LENGTH).fill(null));
+  })
+  .catch(err => {
+    console.error('Failed to fetch words:', err);
+    setTargetWord('CHECK');
+  });
+
   }, []);
 
   const handleChange = (e, row, col) => {
@@ -38,7 +57,7 @@ function Tiles() {
         updatedGuesses[row][col] = '';
         setGuesses(updatedGuesses);
       } else if (col > 0) {
-        inputRefs.current[row][col - 1].focus();
+        inputRefs.current[row][col - 1]?.focus();
         updatedGuesses[row][col - 1] = '';
         setGuesses(updatedGuesses);
       }
@@ -53,21 +72,18 @@ function Tiles() {
     const wordArr = guesses[row];
     if (wordArr.some((ch) => ch === '')) return;
 
-    const word = wordArr.join('');
     const result = Array(WORD_LENGTH).fill('grey');
-    const targetArr = TARGET_WORD.split('');
+    const targetArr = targetWord.split('');
     const usedIndices = [];
 
-    // Green pass
     wordArr.forEach((ch, i) => {
-      if (ch === TARGET_WORD[i]) {
+      if (ch === targetWord[i]) {
         result[i] = 'green';
         targetArr[i] = null;
         usedIndices.push(i);
       }
     });
 
-    // Yellow pass
     wordArr.forEach((ch, i) => {
       if (result[i] !== 'green') {
         const idx = targetArr.findIndex((t, j) => t === ch && !usedIndices.includes(j));
@@ -83,19 +99,21 @@ function Tiles() {
     updatedFeedbacks[row] = result;
     setFeedbacks(updatedFeedbacks);
 
-    if (word === TARGET_WORD) {
+    if (wordArr.join('') === targetWord) {
       alert('🎉 Correct!');
     } else if (row + 1 >= MAX_ATTEMPTS) {
-      alert(`💥 Out of attempts! The word was "${TARGET_WORD}"`);
+      alert(`💥 Out of attempts! The word was "${targetWord}"`);
     }
 
-    if (row + 1 < MAX_ATTEMPTS && word !== TARGET_WORD) {
+    if (row + 1 < MAX_ATTEMPTS && wordArr.join('') !== targetWord) {
       setCurrentRow(row + 1);
       setTimeout(() => {
         inputRefs.current[row + 1][0]?.focus();
       }, 50);
     }
   };
+
+  if (!targetWord) return <div>Loading...</div>;
 
   return (
     <div className="tiles-grid">
