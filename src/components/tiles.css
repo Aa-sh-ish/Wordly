@@ -1,0 +1,37 @@
+.tiles-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 50px;
+  align-items: center;
+}
+
+.tiles-container {
+  display: flex;
+  gap: 10px;
+}
+
+.tile-input {
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  text-align: center;
+  text-transform: uppercase;
+  border: 2px solid #333;
+  border-radius: 5px;
+}
+
+.tile-input.green {
+  background-color: #6aaa64;
+  color: white;
+}
+
+.tile-input.yellow {
+  background-color: #c9b458;
+  color: white;
+}
+
+.tile-input.grey {
+  background-color: #787c7e;
+  color: white;
+}
